@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './App.css';
-import { captureRejections } from 'stream';
+
 const data = [{
   id: 1,
   name: 'GFG T-shirt',
@@ -35,81 +35,92 @@ function App() {
 
 function Header() {
   return <div className='header'>
-    <h1>Shoping Kart</h1>
+    <h1>Shopping Kart</h1>
   </div>
 }
+
 function Main() {
   const [cart, setCart] = useState([]);
 
   function handleAddItem(value) {
-    if (!cart.includes(value)) {
-      setCart((cart) => [...cart, value]);
-    }
-    else {
-      alert("item already added");
+    const itemInCart = cart.find(item => item.id === value.id);
+    if (!itemInCart) {
+      setCart([...cart, { ...value, count: 1 }]);
+    } else {
+      alert("Item already added");
     }
   }
+
   console.log(cart);
   return <div className='main'>
     <Kart cart={cart} onHandleCart={setCart} />
     <ProductList onAddItem={handleAddItem} />
-  </div >
+  </div>
 }
 
-
 function ProductList({ onAddItem }) {
-  const [item, setItem] = useState(data);
   return <div className='productList'>
-    {item.map((item) => <ProductItem item={item} onAddItem={onAddItem} />)}
+    {data.map(item => (
+      <ProductItem key={item.id} item={item} onAddItem={onAddItem} />
+    ))}
   </div>
 }
 
 function Kart({ cart, onHandleCart }) {
-
-  function HandleRemove(item) {
-    onHandleCart((prevCart) => prevCart.filter((el) => el?.id !== item.id));
+  function incrementCount(itemId) {
+    onHandleCart(cart.map(item =>
+      item.id === itemId ? { ...item, count: item.count + 1 } : item
+    ));
   }
+
+  function decrementCount(itemId) {
+    onHandleCart(cart.map(item =>
+      item.id === itemId && item.count > 0 ? { ...item, count: item.count - 1 } : item
+    ));
+  }
+
+  function handleRemove(itemId) {
+    onHandleCart(cart.filter(item => item.id !== itemId));
+  }
+  const totalAmount = cart.reduce(function (acc, obj) { return acc + obj.price * obj.count; }, 0);
+
   return <div className='kart'>
     <h1>My Cart</h1>
-    {cart.map((item) => <CartItem item={item} onHandleRemove={() => HandleRemove(item)} />)}
+    {cart.map(item => (
+      <CartItem
+        key={item.id}
+        item={item}
+        onHandleRemove={() => handleRemove(item.id)}
+        onIncrementCount={() => incrementCount(item.id)}
+        onDecrementCount={() => decrementCount(item.id)}
+      />
+    ))}
+
+    <h1>Total Amount : {totalAmount}</h1>
   </div>
 }
 
 function CartItem({ item, onHandleRemove, onIncrementCount, onDecrementCount }) {
-  const [count, setCount] = useState(0);
-  function incrementCount() {
-    setCount((c) => c + 1);
-  }
-  function decrementCount() {
-    if (count > 0) {
-      setCount((c) => c - 1);
-    }
-  }
   return <div className='cartItem'>
-    <img src={item.image} />
+    <img src={item.image} alt={item.name} />
     <p>{item.name}</p>
     <p>{item.price}</p>
     <div className='productbtn'>
       <button onClick={onHandleRemove}>Remove Item</button>
-      <button onClick={incrementCount}>+</button>
-      <span>{count}</span>
-      <button onClick={decrementCount}>-</button>
+      <button onClick={onIncrementCount}>+</button>
+      <span>{item.count}</span>
+      <button onClick={onDecrementCount}>-</button>
     </div>
   </div>
 }
 
-
 function ProductItem({ item, onAddItem }) {
-  function onHandleItem() {
-    onAddItem(item);
-  }
   return <div className='productItem'>
-    <img src={item.image} alt="abc" />
+    <img src={item.image} alt={item.name} />
     <span>{item.name}</span>
     <span>{item.price}</span>
-    <button onClick={onHandleItem}>Add To Cart</button>
+    <button onClick={() => onAddItem(item)}>Add To Cart</button>
   </div>
 }
-
 
 export default App;
