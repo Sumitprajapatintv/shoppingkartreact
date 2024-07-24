@@ -35,17 +35,23 @@ function App() {
 
 function Header() {
   return <div className='header'>
-
+    <h1>Shoping Kart</h1>
   </div>
 }
 function Main() {
   const [cart, setCart] = useState([]);
+
   function handleAddItem(value) {
-    setCart((cart) => [...cart, value]);
+    if (!cart.includes(value)) {
+      setCart((cart) => [...cart, value]);
+    }
+    else {
+      alert("item already added");
+    }
   }
   console.log(cart);
   return <div className='main'>
-    <Kart cart={cart} />
+    <Kart cart={cart} onHandleCart={setCart} />
     <ProductList onAddItem={handleAddItem} />
   </div >
 }
@@ -58,34 +64,36 @@ function ProductList({ onAddItem }) {
   </div>
 }
 
-function Kart({ cart }) {
-  const [count, setCount] = useState(0);
-  function onHandleRemove(item) {
-    console.log("item", item);
-    cart = cart.filter((el) => el?.id !== item.id)
-  }
-  function onHandleCountInc() {
-    setCount((c) => c = c + 1)
-  }
-  function onHandleCountDec() {
-    if (count > 0) setCount((c) => c = c - 1)
+function Kart({ cart, onHandleCart }) {
+
+  function HandleRemove(item) {
+    onHandleCart((prevCart) => prevCart.filter((el) => el?.id !== item.id));
   }
   return <div className='kart'>
     <h1>My Cart</h1>
-    {cart.map((item) => <CartItem item={item} count={count} onHandleCountInc={onHandleCountInc} onHandleCountDec={onHandleCountDec} />)}
+    {cart.map((item) => <CartItem item={item} onHandleRemove={() => HandleRemove(item)} />)}
   </div>
 }
 
-function CartItem({ count, item, onHandleCountInc, onHandleCountDec, onHandleRemove }) {
+function CartItem({ item, onHandleRemove, onIncrementCount, onDecrementCount }) {
+  const [count, setCount] = useState(0);
+  function incrementCount() {
+    setCount((c) => c + 1);
+  }
+  function decrementCount() {
+    if (count > 0) {
+      setCount((c) => c - 1);
+    }
+  }
   return <div className='cartItem'>
     <img src={item.image} />
     <p>{item.name}</p>
     <p>{item.price}</p>
     <div className='productbtn'>
       <button onClick={onHandleRemove}>Remove Item</button>
-      <button onClick={onHandleCountInc}>+</button>
+      <button onClick={incrementCount}>+</button>
       <span>{count}</span>
-      <button onClick={onHandleCountDec}>-</button>
+      <button onClick={decrementCount}>-</button>
     </div>
   </div>
 }
